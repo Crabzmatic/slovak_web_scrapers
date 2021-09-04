@@ -8,9 +8,9 @@ import requests
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 
-TEMPLATE = 'https://spravy.pravda.sk/domace/clanok/'
+TEMPLATE = 'https://spravy.pravda.sk/clanok/'
 # as of 04 september 2021, the highest article id on pravda.sk is around 599463, ta3 around 211018
-MAX_ARTICLE_ID = 1000
+MAX_ARTICLE_ID = 10000
 OUTPUT_FILE = 'pravda_sk.txt'
 LOG_FILE = 'pravda_sk_log.txt'
 ARTICLE_DESCRIPTION_HTML_CLASS = 'article-detail-perex'
@@ -35,7 +35,7 @@ def configure(arguments):
         elif arg_name == '--body-html-class':
             ARTICLE_BODY_HTML_CLASS = arg_value
         else:
-            print('Invalid arguments present!')
+            print(f'Invalid argument present: {arg_name}')
             exit()
 
     print('Scraper configured:')
@@ -92,9 +92,18 @@ def main():
     for url in urls_with_progress_bar:
         urls_with_progress_bar.set_description("Processing %s" % url[:50])
 
-        request = requests.head(url, allow_redirects=True)
+        try:
+            request = requests.head(url, allow_redirects=True)
+        except:
+            log_error(url)
+            continue
+
         if request.status_code == 200:
-            clean_text = extract_clean_text(request)
+            try:
+                clean_text = extract_clean_text(request)
+            except:
+                log_error(url)
+                continue
         else:
             log_error(url)
             continue
@@ -107,6 +116,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
